@@ -1,10 +1,9 @@
+import random
 import mido
 from mido import Message, MidiFile, MidiTrack
 from collections import defaultdict
 
-def preprocess_midi(midi_file, drum_delays):
-    mid = mido.MidiFile(midi_file)
-    
+def preprocess_midi(mid, drum_delays):    
     adjusted_events = defaultdict(list)
     
     current_time = 0
@@ -48,26 +47,37 @@ def createProcessedMidi(commands, bpm):
     midi = MidiFile()
     track = MidiTrack()
     midi.tracks.append(track)
+    prev_time = commands[0][0]
 
     for time, note, velocity in commands:
-        ticks = int(time * midi.ticks_per_beat * bpm / 60) 
+        ticks = int((time - prev_time) * midi.ticks_per_beat * bpm / 60)
+        print("Ticks: " + str(ticks) + "\t" + "Note: " + str(note) + "\t" + "Velocity: " + str(velocity))
 
         if velocity > 0:  # Note on
             track.append(Message('note_on', note=note, velocity=velocity, time=ticks))
         else:  # Note off
             track.append(Message('note_off', note=note, velocity=0, time=ticks))
+        prev_time = time
 
     # Save the MIDI file
-    midi.save('output.mid')
+    midi.save('ouput_' + str(random.random()) + '.mid')
 
+def getNotes(midi_file):
+    mid = mido.MidiFile(midi_file)   
+    notes = {} 
+    for msg in mid:        
+        if msg.type == 'note_on':  # 9 is drum notes
+            note = msg.note
+            notes.add(note)
+    return notes
 
 def main():
     # Example usage
     drum_delays = {
-        36: .1,
-        37: .2,
-        38: .1,
-        39: .1
+        36: 0,
+        37: 0,
+        38: 0,
+        39: 0
         # 36: 0.05,  # Bass drum
         # 38: 0.03,  # Snare drum
         # 42: 0.02,  # Closed hi-hat
@@ -77,15 +87,12 @@ def main():
     max_delta = max(drum_delays.values())
 
 
-    midiname = r'DrummerBot\midifile.mid'
     midi_file = mido.MidiFile(r'DrummerBot\midifile.mid')  # Replace with your actual MIDI file path
 
 
-    # preprocess adjusted times of hits
     bpm = getBPM(midi_file)
-    adjusted_events = preprocess_midi(midiname, drum_delays)
+    adjusted_events = preprocess_midi(midi_file, drum_delays)
     motor_commands = generate_motor_commands(adjusted_events, max_delta)
-    printMotorControls(motor_commands)
     createProcessedMidi(motor_commands, bpm)
 
 
