@@ -22,6 +22,32 @@ Servo D4;
 Servo D5;
 Servo D6;
 
+//functions that the servo number that the drumstick should rise to before hitting based on the velocity
+
+int adjustedVelocityControlByte(int velocityControlByte){
+  if(velocityControlByte >= 120){
+    return 120;
+  }
+  else if(velocityControlByte <= 40){
+    return 40;
+  }
+  else{
+    return velocityControlByte;
+  }
+}
+
+int velocityControl(int servoNumber, int changedVelocityControlByte){
+  if(servoNumber == MD1 || servoNumber == MD3 || servoNumber == MD4 || servoNumber == MD6){
+    return (60 + (changedVelocityControlByte - 40)/2);
+  }
+  else if (servoNumber ==  MD2 || servoNumber == MD5){
+    return (150 - 65((changedVelocityControlByte-40)/80));
+  }
+  else{
+    return (120 - changedVelocityControlByte)/80;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(KK1, OUTPUT);
@@ -40,6 +66,9 @@ void loop() {
     rx = MidiUSB.read();
     if (rx.header != 0) {
       if (rx.header == 9) {
+        val_init = velocityControl(rx.byte2, adjustedVelocityControlByte(rx.byte3));
+        dal_init = velocityControl(rx.byte2, adjustedVelocityControlByte(rx.byte3));
+        kal_init = velocityControl(rx.byte2, adjustedVelocityControlByte(rx.byte3));
         val = 60;
         dal = 150;
         kal = 1;
