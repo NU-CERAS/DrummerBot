@@ -3,6 +3,9 @@
 int val;
 int dal;
 int kal;
+int val_init;
+int dal_init;
+int kal_init;
 
 // Midi Constants
 const int MKK = 36;
@@ -41,7 +44,7 @@ int velocityControl(int servoNumber, int changedVelocityControlByte){
     return (60 + (changedVelocityControlByte - 40)/2);
   }
   else if (servoNumber ==  MD2 || servoNumber == MD5){
-    return (150 - 65((changedVelocityControlByte-40)/80));
+    return (150 - 65*((changedVelocityControlByte-40)/80));
   }
   else{
     return (120 - changedVelocityControlByte)/80;
