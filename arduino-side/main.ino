@@ -85,11 +85,14 @@ void loop() {
           digitalWrite(KK2, kal);
           break;
         case MD1:
+          if(rx.header == 8){
             D1.write(val);
-          else if(rx.header == 9)
+          }
+          else if(rx.header == 9){
             D1.write(val_init && rx.byte3 >= 45);
             delay(100);
             D1.write(val);
+          }
           break;
         case MD2:
           D2.write(dal);
