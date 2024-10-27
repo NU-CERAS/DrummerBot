@@ -88,8 +88,8 @@ void loop() {
           if(rx.header == 8){
             D1.write(val);
           }
-          else if(rx.header == 9){
-            D1.write(val_init && rx.byte3 >= 45);
+          else if(rx.header == 9 && rx.byte3 >= 45){
+            D1.write(val_init);
             delay(100);
             D1.write(val);
           }
