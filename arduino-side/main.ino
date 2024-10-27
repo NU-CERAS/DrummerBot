@@ -90,7 +90,7 @@ void loop() {
           }
           else if(rx.header == 9 && rx.byte3 >= 45){
             D1.write(val_init);
-            delay(100);
+            delay(500);
             D1.write(val);
           }
           break;
