@@ -73,14 +73,14 @@ def main():
 
     # ADD MOTOR-TO-SOUND DELAYS HERE (in milliseconds)
     drum_delays = {
-        36: 0, # Bass Drum 1
+        36: .0, # Bass Drum 1
         37: 0, # Side Stick
         40: 0, # Electric Snare
         41: 0, # Low Floor Tom
         42: 0, # Closed Hi Hat
         43: 0, # High Floor Tom
         45: 0, # Low Tom
-        51: 0  # Ride Cymbal 1 
+        51: .4  # Ride Cymbal 1 
     }
     max_delta = max(drum_delays.values())
     
