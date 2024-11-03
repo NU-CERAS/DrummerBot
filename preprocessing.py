@@ -10,8 +10,11 @@ def preprocess_midi(mid, drum_delays, max_delta):
         current_time += msg.time
         if msg.type == 'note_on':  
             note = msg.note
+            vel = msg.velocity
+            print("Velocity is: " + "\t" + str(vel))
             if note in drum_delays:
-                adjusted_time = current_time - drum_delays[note]
+                # adjusted_time = current_time - drum_delays[note]
+                adjusted_time = current_time - vel
                 adjusted_events[note].append((adjusted_time, msg.velocity))
 
     all_events = []
@@ -34,7 +37,7 @@ def createProcessedMidi(commands, bpm):
 
     for time, note, velocity in commands:
         ticks = int((time - prev_time) * midi.ticks_per_beat * bpm / 60)
-        print("Ticks: " + str(ticks) + "\t" + "Note: " + str(note) + "\t" + "Velocity: " + str(velocity))
+        # print("Ticks: " + str(ticks) + "\t" + "Note: " + str(note) + "\t" + "Velocity: " + str(velocity))
 
         if velocity > 0:  # Note on
             track.append(Message('note_on', channel=9, note=note, velocity=velocity, time=ticks))
@@ -67,25 +70,24 @@ def getBPM(midi_file):
     return 120 # if nothing found, return 120bpm 
 
 def main():
-
     # MIDI FILE PATH
-    midi_file = mido.MidiFile(r'Latin9.mid')  
+    midi_file = mido.MidiFile(r'varyingmidifile.mid')  
 
     # ADD MOTOR-TO-SOUND DELAYS HERE (in milliseconds)
     drum_delays = {
-        36: .0, # Bass Drum 1
+        36: 0, # Bass Drum 1
         37: 0, # Side Stick
         40: 0, # Electric Snare
         41: 0, # Low Floor Tom
         42: 0, # Closed Hi Hat
         43: 0, # High Floor Tom
         45: 0, # Low Tom
-        51: .4  # Ride Cymbal 1 
+        51: 0 # Ride Cymbal 1 
     }
     max_delta = max(drum_delays.values())
     
     commands = preprocess_midi(midi_file, drum_delays, max_delta)
-    createProcessedMidi(commands, getBPM(midi_file))    
+    createProcessedMidi(commands, getBPM(midi_file))      
 
 if __name__ == "__main__":
     main()
