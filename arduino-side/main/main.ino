@@ -40,3 +40,76 @@ void setup() {
 void loop() {
 
 }
+=======
+#include "MIDIUSB.h"
+#include <Servo.h>
+int val;
+
+// Midi Constants
+const int MD1 = 36;
+Servo D1;
+
+int getDelay(vel) {
+  if (vel < 50) {
+    return 10;
+  }
+  else if (vel < 100) {
+    return 50;
+  }
+  else if (vel < 150) {
+    return 200;
+  }
+}
+
+int getDelayDown(vel) {
+  if (vel < 50) {
+    return 7;
+  }
+  else if (vel < 100) {
+    return 40;
+  }
+  else if (vel < 150) {
+    return 170;
+  }
+}
+
+int getPos(vel) {
+  if (vel < 50) {
+    return 120;
+  }
+  else if (vel < 100) {
+    return 100;
+  }
+  else if (vel < 150) {
+    return 60;
+  }
+}
+
+int scheduled_next_event = -1;
+int scheduled_next_next_event = -1;
+
+void setup() {
+  Serial.begin(115200);
+  D1.attach(5);
+}
+
+void loop() {
+  midiEventPacket_t rx;
+  if (rx.header == 0x09) {
+    //byte note = rx.byte2; 
+    byte vel = rx.byte3;
+    D1.write(getPos(vel));
+    scheduled_next_event = millis() + getDelay(vel);
+    scheduled_back_up_event = millis() + getDelay(vel) + getDelaydown(vel);
+  }
+
+  if (millis() >= scheduled_next_event) {
+    D1.write(137);
+    scheduled_down_event = -1;
+  }
+
+  if (millis() >= scheduled_back_up_event) {
+    D1.write(125);
+    scheduled_back_up_event = -1;
+  }
+}
