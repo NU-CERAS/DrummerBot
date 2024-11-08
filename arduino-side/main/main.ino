@@ -24,6 +24,8 @@ Servo D4;
 Servo D5;
 Servo D6;
 
+int amt = 90
+
 
 void setup() {
   Serial.begin(115200);
@@ -38,10 +40,13 @@ void setup() {
 }
 
 void loop() {
-  D1.write(90);
-  delay(2000);
-  D1.write(80);
-  delay(2000);
-  D1.write(100);
-  delay(2000);
+  if (amt > 137) {
+    amt = amt + 1
+    D1.write(amt)
+  }
+  else {
+    amt = amt - 1
+    D1.write(amt)
+  }
+  delay(10)
 }
