@@ -26,46 +26,35 @@ def getBPM(midi_file):
 
 # Processes midi file and pushes back drum hits by given amount so they create sound at the right time
 def preprocess_midi(mid):        
-    adjusted_events = defaultdict(list)
+    adjusted_events = []
     current_time = 0
+    note_end_shift_time = {}
+
     for msg in mid:
         current_time += msg.time
-        if msg.type == 'note_on':  
-            note = msg.note
-            vel = msg.velocity
-            adjusted_time = current_time - (vel / 1000)
-            adjusted_events[note].append((adjusted_time, msg.velocity))
-        elif msg.type =='note_off':
-            note = msg.note
-            vel = msg.velocity
-            adjusted_time = current_time - (vel / 1000)
-            adjusted_events[note].append((adjusted_time, msg.velocity))
-        
-    all_events = []
-    for note, events in adjusted_events.items():
-        for time, velocity in events: # events is a list of the adjusted time and velocity 
-            all_events.append((time, note, velocity))
+        adjusted_time = current_time - (msg.velocity / 1000) if (msg.type == 'note_on' or msg.type == 'note_off') else 0
 
-    all_events.sort()
-    max_delta = 0
-    for i in all_events:
-        max_delta = min(max_delta, i[0])
-    commands = []
-    for time, note, velocity in all_events:
-        commands.append([round(time + max_delta, 5), note, velocity])
-    return commands
+        if msg.type == 'note_on':  
+            note_end_shift_time[(msg.note, msg.channel)] = current_time - adjusted_time
+            adjusted_events.append((adjusted_time, msg.note, msg.velocity))
+        elif msg.type =='note_off':
+            adjusted_time = current_time - note_end_shift_time.pop((msg.note, msg.channel), 0)
+            adjusted_events.append((adjusted_time, msg.note, msg.velocity))
+
+    adjusted_events.sort()
+    max_negative = min(0, adjusted_events[0][0])
+    adjusted_events = [(round(time + (max_negative * -1), 5), note, velocity) for time, note, velocity in adjusted_events]
+    return adjusted_events
 
 # Creates midi file based on commands
-def createProcessedMidi(commands, bpm):
+def createProcessedMidi(adjusted_events, bpm):
     midi = MidiFile()
     track = MidiTrack()
     midi.tracks.append(track)
-    prev_time = commands[0][0]
+    prev_time = adjusted_events[0][0]
 
-    for time, note, velocity in commands:
+    for time, note, velocity in adjusted_events:
         ticks = int((time - prev_time) * midi.ticks_per_beat * bpm / 60)
-        # print("Ticks: " + str(ticks) + "\t" + "Note: " + str(note) + "\t" + "Velocity: " + str(velocity))
-
         if velocity > 0:  # Note on
             track.append(Message('note_on', channel=9, note=note, velocity=velocity, time=ticks))
         else:  # Note off
@@ -75,9 +64,9 @@ def createProcessedMidi(commands, bpm):
 
 def main():
     # MIDI FILE PATH
-    midi_file = mido.MidiFile(r'test Edit 1 Export 1.mid')  
-    commands = preprocess_midi(midi_file)
-    createProcessedMidi(commands, getBPM(midi_file))      
+    midi_file = mido.MidiFile(r'waveformpyramid.mid')  
+    adjusted_events = preprocess_midi(midi_file)
+    createProcessedMidi(adjusted_events, getBPM(midi_file))      
 
 if __name__ == "__main__":
     main()
