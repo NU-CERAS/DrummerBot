@@ -1,8 +1,8 @@
 #include "MIDIUSB.h"
 #include <Servo.h>
 // Define Servo Constants
-const int neutPos = 120;
-const int hitPos = 130;
+const int neutPos = 65;
+const int hitPos = 60;
 
 // Define MIDI values for each servo
 const int MD1 = 36;
@@ -13,7 +13,7 @@ const int MD5 = 40;
 const int MD6 = 41;
 
 // Define servo pins
-const int servoPins[] = {5, 3, 6, 9, 10, 11};
+const int servoPins[] = {3, 5, 6, 9, 10, 11};
 Servo servos[6];
 
 // Define variables to store the current position and action state for each servo
@@ -21,6 +21,23 @@ int servoValues[6] = {0, 0, 0, 0, 0, 0};
 unsigned long previousMillis[6] = {0, 0, 0, 0, 0, 0};  // Store timing for each servo
 const long interval = 100;                              // Interval for servo movement in milliseconds
 bool servoAction[6] = {false, false, false, false, false, false};  // Track action states for each servo
+
+
+int adjustedVelocityControlByte(int velocityControlByte){
+  if(velocityControlByte >= 120){
+    return 120;
+  }
+  else if(velocityControlByte <= 40){
+    return 40;
+  }
+  else{
+    return velocityControlByte;
+  }
+}
+
+int velocityControl(int changedVelocityControlByte){
+    return (65 + (changedVelocityControlByte - 40)/2);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -47,7 +64,7 @@ void loop() {
 
         if (rx.header == 9) {
           // Start servo action for the current servo
-          servoValues[servoIndex] = rx.byte3;
+          servoValues[servoIndex] = velocityControl(adjustedVelocityControlByte(rx.byte3));
           servos[servoIndex].write(servoValues[servoIndex]); 
           previousMillis[servoIndex] = currentMillis;  // Initialize timing for the servo
           servoAction[servoIndex] = true;              // Mark action as active
