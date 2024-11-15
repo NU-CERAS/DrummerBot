@@ -1,8 +1,13 @@
 #include "MIDIUSB.h"
 #include <Servo.h>
-// Define Servo Constants
-const int neutPos = 65;
-const int hitPos = 60;
+
+// Define Servo Constants for Kal Servos (MD1, MD3, MD4, MD6)
+const int neutPosKal = 65;
+const int hitPosKal = 60;
+
+// Define Servo Constants for Dal Servos (MD2, MD5)
+const int neutPosDal = 145;
+const int hitPosDal = 150;
 
 // Define MIDI values for each servo
 const int MD1 = 36;
@@ -22,21 +27,27 @@ unsigned long previousMillis[6] = {0, 0, 0, 0, 0, 0};  // Store timing for each 
 const long interval = 100;                              // Interval for servo movement in milliseconds
 bool servoAction[6] = {false, false, false, false, false, false};  // Track action states for each servo
 
+// Define servo types: 0 for Kal, 1 for Dal
+const int servoTypes[6] = {0, 1, 0, 0, 1, 0};  // MD2 and MD5 are Dal, others are Kal
 
-int adjustedVelocityControlByte(int velocityControlByte){
-  if(velocityControlByte >= 120){
+int adjustedVelocityControlByte(int velocityControlByte) {
+  if (velocityControlByte >= 120) {
     return 120;
-  }
-  else if(velocityControlByte <= 40){
+  } else if (velocityControlByte <= 40) {
     return 40;
-  }
-  else{
+  } else {
     return velocityControlByte;
   }
 }
 
-int velocityControl(int changedVelocityControlByte){
-    return (65 + (changedVelocityControlByte - 40)/2);
+int velocityControl(int changedVelocityControlByte, int servoType) {
+  if (servoType == 1) {  // Dal servos
+    // Scale velocity inversely for Dal servos: 145 (low velocity) to 85 (high velocity)
+    return 145 - ((changedVelocityControlByte - 40) * 60 / 80); // 60 = (145 - 85), 80 = (120 - 40)
+  } else {               // Kal servos
+    // Scale velocity normally for Kal servos: 65 (low velocity) to 100 (high velocity)
+    return 65 + ((changedVelocityControlByte - 40) * 35 / 80); // 35 = (100 - 65), 80 = (120 - 40)
+  }
 }
 
 void setup() {
@@ -61,17 +72,18 @@ void loop() {
       // Check each MIDI value to control the respective servo
       if (midiValue >= MD1 && midiValue <= MD6) {
         int servoIndex = midiValue - MD1;  // Calculate the servo index based on MIDI value
+        int servoType = servoTypes[servoIndex];  // Determine servo type (Kal or Dal)
 
         if (rx.header == 9) {
           // Start servo action for the current servo
-          servoValues[servoIndex] = velocityControl(adjustedVelocityControlByte(rx.byte3));
-          servos[servoIndex].write(servoValues[servoIndex]); 
+          servoValues[servoIndex] = velocityControl(adjustedVelocityControlByte(rx.byte3), servoType);
+          servos[servoIndex].write(servoValues[servoIndex]);
           previousMillis[servoIndex] = currentMillis;  // Initialize timing for the servo
           servoAction[servoIndex] = true;              // Mark action as active
         } 
         else if (rx.header == 8) {
           // Note-off message: set the servo to a neutral position
-          servoValues[servoIndex] = neutPos;
+          servoValues[servoIndex] = (servoType == 1) ? neutPosDal : neutPosKal;
           servos[servoIndex].write(servoValues[servoIndex]);
           servoAction[servoIndex] = false;             // Reset action on note-off
         }
@@ -88,11 +100,11 @@ void loop() {
 
   // Check each servo to see if it's time to move it back to the resting position
   for (int i = 0; i < 6; i++) {
+    int servoType = servoTypes[i];  // Determine servo type
     if (servoAction[i] && (currentMillis - previousMillis[i] >= interval)) {
-      servoValues[i] = hitPos;          // Set resting position
+      servoValues[i] = (servoType == 1) ? hitPosDal : hitPosKal;  // Set resting position based on servo type
       servos[i].write(servoValues[i]);
       servoAction[i] = false;        // Reset action after returning to resting position
     }
   }
 }
-
