@@ -2,12 +2,15 @@
 #include <Servo.h>
 
 // Define Servo Constants for Kal Servos (MD1, MD3, MD4, MD6)
-const int neutPosKal = 65;
-const int hitPosKal = 60;
+const int neutPosKal = 110;
+const int hitPosKal = 115;
 
 // Define Servo Constants for Dal Servos (MD2, MD5)
-const int neutPosDal = 145;
-const int hitPosDal = 150;
+const int neutPosDal = 65;
+const int hitPosDal = 60;
+
+const int maxVelDal = 125;
+const int maxVelKal = 160;
 
 // Define MIDI values for each servo
 const int MD1 = 36;
@@ -24,7 +27,7 @@ Servo servos[6];
 // Define variables to store the current position and action state for each servo
 int servoValues[6] = {0, 0, 0, 0, 0, 0};
 unsigned long previousMillis[6] = {0, 0, 0, 0, 0, 0};  // Store timing for each servo
-const long interval = 100;                              // Interval for servo movement in milliseconds
+const long interval = 20;                              // Interval for servo movement in milliseconds
 bool servoAction[6] = {false, false, false, false, false, false};  // Track action states for each servo
 
 // Define servo types: 0 for Kal, 1 for Dal
@@ -43,10 +46,10 @@ int adjustedVelocityControlByte(int velocityControlByte) {
 int velocityControl(int changedVelocityControlByte, int servoType) {
   if (servoType == 1) {  // Dal servos
     // Scale velocity inversely for Dal servos: 145 (low velocity) to 85 (high velocity)
-    return 145 - ((changedVelocityControlByte - 40) * 60 / 80); // 60 = (145 - 85), 80 = (120 - 40)
+    return neutPosDal - ((changedVelocityControlByte - 40) * (neutPosDal - maxVelDal) / 80); // 80 = (120 - 40)
   } else {               // Kal servos
     // Scale velocity normally for Kal servos: 65 (low velocity) to 100 (high velocity)
-    return 65 + ((changedVelocityControlByte - 40) * 35 / 80); // 35 = (100 - 65), 80 = (120 - 40)
+    return neutPosKal + ((changedVelocityControlByte - 40) * (neutPosKal - maxVelKal) / 80); // 80 = (120 - 40)
   }
 }
 
