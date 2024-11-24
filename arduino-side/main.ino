@@ -27,7 +27,6 @@ Servo servos[6];
 // Define variables to store the current position and action state for each servo
 int servoValues[6] = {0, 0, 0, 0, 0, 0};
 unsigned long previousMillis[6] = {0, 0, 0, 0, 0, 0};  // Store timing for each servo
-const long interval = 20;                              // Interval for servo movement in milliseconds
 bool servoAction[6] = {false, false, false, false, false, false};  // Track action states for each servo
 
 // Define servo types: 0 for Kal, 1 for Dal
@@ -68,6 +67,7 @@ void loop() {
 
   do {
     rx = MidiUSB.read();
+    int interval = rx.byte3 - 20;                              // Interval for servo movement in milliseconds
     if (rx.header != 0) {
       // Handle incoming MIDI messages
       int midiValue = rx.byte2;
