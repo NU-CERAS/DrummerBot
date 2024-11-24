@@ -31,7 +31,7 @@ def preprocess_midi(mid):
     note_end_shift_time = {}
 
     for msg in mid:
-        vel_coefficient = 1 # change this based on testing. Linear time shift based on ve
+        vel_coefficient = 1 # change this based on testing. Linear time shift based on veloicty
         current_time += msg.time
         adjusted_time = current_time - ((msg.velocity - 20) / 1000 * vel_coefficient) if (msg.type == 'note_on' or msg.type == 'note_off') else 0
 
