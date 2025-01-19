@@ -13,12 +13,17 @@ const int maxVelDal = 125;
 const int maxVelKal = 160;
 
 // Define MIDI values for each servo
-const int MD1 = 36;
-const int MD2 = 37;
-const int MD3 = 38;
-const int MD4 = 39;
-const int MD5 = 40;
-const int MD6 = 41;
+const int MKK = 36;
+const int MD1 = 37;
+const int MD2 = 38;
+const int MD3 = 39;
+const int MD4 = 40;
+const int MD5 = 41;
+const int MD6 = 42;
+
+// Define kick drum pins 
+const int KK1 = 4;
+const int KK2 = 7;
 
 // Define servo pins
 const int servoPins[] = {3, 5, 6, 9, 10, 11};
@@ -55,6 +60,8 @@ int velocityControl(int changedVelocityControlByte, int servoType) {
 
 void setup() {
   Serial.begin(115200);
+  pinMode(KK1, OUTPUT);
+  pinMode(KK2, OUTPUT);
 
   // Attach each servo to its corresponding pin
   for (int i = 0; i < 6; i++) {
@@ -72,8 +79,18 @@ void loop() {
       // Handle incoming MIDI messages
       int midiValue = rx.byte2;
 
+      // Check for kick drum MIDI messages
+      if (midiValue == MKK) {
+        if (rx.header == 9) {  // Note On
+          digitalWrite(KK1, HIGH);
+          digitalWrite(KK2, HIGH);
+        } else if (rx.header == 8) {  // Note Off
+          digitalWrite(KK1, LOW);
+          digitalWrite(KK2, LOW);
+        }
+      }
       // Check each MIDI value to control the respective servo
-      if (midiValue >= MD1 && midiValue <= MD6) {
+      else if (midiValue >= MD1 && midiValue <= MD6) {
         int servoIndex = midiValue - MD1;  // Calculate the servo index based on MIDI value
         int servoType = servoTypes[servoIndex];  // Determine servo type (Kal or Dal)
 
