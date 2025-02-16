@@ -2,10 +2,10 @@
 #include <Servo.h>
 
 // Define new neutral positions for each servo
-const int neutPos[6] = {80, 90, 75, 76, 80, 101};
+const int neutPos[6] = {80, 87, 75, 76, 80, 101};
 
 // Define hit positions (Kal servos: +5, Dal servos: -5)
-const int hitPos[6] = {85, 85, 80, 81, 75, 106};
+const int hitPos[6] = {85, 82, 80, 81, 75, 106};
 
 const int maxVelDal = 125;
 const int maxVelKal = 160;
