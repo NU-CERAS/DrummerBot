@@ -86,10 +86,9 @@ void loop() {
           previousMillis[servoIndex] = currentMillis;
           servoAction[servoIndex] = true;
         } 
-        else if (rx.header == 8) {
+        else if (rx.header == 8 && !servoAction[servoIndex]) {
           servoValues[servoIndex] = neutPos[servoIndex];
           servos[servoIndex].write(servoValues[servoIndex]);
-          servoAction[servoIndex] = false;
         }
 
         Serial.print(rx.byte1);
@@ -100,9 +99,9 @@ void loop() {
       }
     }
   } while (rx.header != 0);
-
+ 
   for (int i = 0; i < 6; i++) {
-    if (servoAction[i] && (currentMillis - previousMillis[i] >= interval)) {
+    if (servoAction[i] && ((currentMillis - previousMillis[i] >= interval) || rx.header == 8)) {
       servos[i].write(hitPos[i]);
       servoAction[i] = false;
     }
