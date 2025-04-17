@@ -2,10 +2,10 @@
 #include <Servo.h>
 
 // Define new neutral positions for each servo
-const int neutPos[6] = {80, 87, 75, 76, 80, 101};
+const int neutPos[6] = {85, 87, 80, 81, 80, 101};
 
 // Define hit positions (Kal servos: +5, Dal servos: -5)
-const int hitPos[6] = {85, 82, 80, 81, 75, 106};
+const int hitPos[6] = {80, 82, 75, 76, 75, 106};
 
 const int maxVelDal = 125;
 const int maxVelKal = 160;
@@ -24,7 +24,7 @@ const int KK1 = 4;
 const int KK2 = 7;
 
 // Define servo pins
-const int servoPins[] = {3, 5, 6, 9, 10, 11};
+const int servoPins[] = {8, 9, 10, 11, 12, 13};
 Servo servos[6];
 
 // Define variables to store the current position and action state for each servo
@@ -34,7 +34,7 @@ const long interval = 20;                              // Interval for servo mov
 bool servoAction[6] = {false, false, false, false, false, false};  // Track action states for each servo
 
 // Define servo types: 0 for Kal, 1 for Dal
-const int servoTypes[6] = {0, 1, 0, 0, 1, 0};  // MD2 and MD5 are Dal, others are Kal
+const int servoTypes[6] = {1, 1, 1, 1, 1, 0};  // MD2 and MD5 are Dal, others are Kal
 
 int adjustedVelocityControlByte(int velocityControlByte) {
   return constrain(velocityControlByte, 40, 120);
@@ -62,12 +62,12 @@ void setup() {
 void loop() {
   midiEventPacket_t rx;
   unsigned long currentMillis = millis();
-
+  bool note_over = false;
   do {
     rx = MidiUSB.read();
+    Serial.println(rx.header);
     if (rx.header != 0) {
       int midiValue = rx.byte2;
-
       if (midiValue == MKK) {
         if (rx.header == 9) {  // Note On
           digitalWrite(KK1, HIGH);
@@ -85,12 +85,14 @@ void loop() {
           servos[servoIndex].write(servoValues[servoIndex]);
           previousMillis[servoIndex] = currentMillis;
           servoAction[servoIndex] = true;
+        }
+        else if(rx.header == 8 && servoAction[servoIndex]) {
+          note_over = true;
         } 
         else if (rx.header == 8 && !servoAction[servoIndex]) {
           servoValues[servoIndex] = neutPos[servoIndex];
           servos[servoIndex].write(servoValues[servoIndex]);
         }
-
         Serial.print(rx.byte1);
         Serial.print(" || ");
         Serial.print(rx.byte2);
@@ -101,9 +103,10 @@ void loop() {
   } while (rx.header != 0);
  
   for (int i = 0; i < 6; i++) {
-    if (servoAction[i] && ((currentMillis - previousMillis[i] >= interval) || rx.header == 8)) {
+    if (servoAction[i] && ((currentMillis - previousMillis[i] >= interval) || note_over)) {
       servos[i].write(hitPos[i]);
       servoAction[i] = false;
+      note_over = false;
     }
   }
 }
