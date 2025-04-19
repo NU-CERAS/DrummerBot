@@ -1,5 +1,7 @@
 #include <SPI.h>
 
+uint16_t info = 12345;
+
 void setup() {
   pinMode(10, OUTPUT);   // SS must be output
   SPI.begin();           // Start SPI
@@ -9,7 +11,7 @@ void setup() {
 void loop() {
   SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
   digitalWrite(10, LOW);           // Select slave
-  SPI.transfer(42);                // Send value
+  SPI.transfer(info);                // Send value
   digitalWrite(10, HIGH);          // Deselect
   SPI.endTransaction();
 
