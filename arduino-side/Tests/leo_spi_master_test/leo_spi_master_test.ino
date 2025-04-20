@@ -35,22 +35,24 @@ ISR(SPI_STC_vect) {
 
 void loop() {
   // once reaches 4 messages, adjust servos/motors
-  if (receivedValues[1] == TYPE_SERVO) {
+  if (ifComplete) {
+    if (receivedValues[1] == TYPE_SERVO) {
     // adjust servo
     // device id: receivedValues[2]
     // position: receivedValues[3]
-  }
-  else if (receivedValues[1] == TYPE_STEPPER) {
-    // adjust stepper motor
-  }
-  else if (receivedValues[1] == TYPE_SOLENOID) {
-    // adjust solenoid
-  }
+    }
+    else if (receivedValues[1] == TYPE_STEPPER) {
+      // adjust stepper motor
+    }
+    else if (receivedValues[1] == TYPE_SOLENOID) {
+      // adjust solenoid
+    }
 
-  Serial.println("Adjusted position");
+    Serial.println("Adjusted position");
 
-  byteIndex = 0;
-  ifComplete = false;
+    byteIndex = 0;
+    ifComplete = false;
+  }
 
   delay(500);
 }
