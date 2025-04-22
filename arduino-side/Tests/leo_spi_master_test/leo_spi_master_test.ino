@@ -1,21 +1,20 @@
 #include <SPI.h>
 
-volatile byte receivedValue = 0;
+uint8_t info = 12;
 
 void setup() {
+  pinMode(10, OUTPUT);   // SS must be output
+  SPI.begin();           // Start SPI
   Serial.begin(9600);
-  pinMode(MISO, OUTPUT);       // Required for SPI slave
-  pinMode(53, INPUT);          // SS must be input or low
-  SPCR |= _BV(SPE);            // Enable SPI in slave mode
-  SPI.attachInterrupt();       // Enable SPI interrupt
-}
-
-ISR(SPI_STC_vect) {
-  receivedValue = SPDR;        // Store incoming byte
 }
 
 void loop() {
-  Serial.print("Received: ");
-  Serial.println(receivedValue);
-  delay(500);
+  SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE0));
+  digitalWrite(10, LOW);           // Select slave
+  SPI.transfer(info);                // Send value
+  digitalWrite(10, HIGH);          // Deselect
+  SPI.endTransaction();
+
+  Serial.println("Sent: info");
+  delay(1000);
 }
