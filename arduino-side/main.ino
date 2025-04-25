@@ -65,7 +65,6 @@ void loop() {
   bool note_over = false;
   do {
     rx = MidiUSB.read();
-    Serial.println(rx.header);
     if (rx.header != 0) {
       int midiValue = rx.byte2;
       if (midiValue == MKK) {
